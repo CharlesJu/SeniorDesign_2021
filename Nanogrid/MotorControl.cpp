@@ -5,17 +5,18 @@
 void setMotorSpeed(float speed)
 {
     uint8_t pwm_value;
+    speed *= MOTOR_DIRECTION;
     if (speed < 0)
     {
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
-        pwm_value = uint8_t(-speed * 255);
+        pwm_value = (uint8_t)(-speed * 255);
     }
     else if (speed > 0)
     {
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
-        pwm_value = uint8_t(speed * 255);
+        pwm_value = (uint8_t)(speed * 255);
     }
     analogWrite(ENA, pwm_value);
 }
@@ -30,7 +31,7 @@ void motorTest()
 {
     for (int i = 0; i < 255; ++i)
     {
-        setMotorSpeed(float(i) / 255.0);
+        setMotorSpeed(1.0);
         delay(50);
     }
     setMotorSpeed(0);
@@ -39,7 +40,7 @@ void motorTest()
 
     for (int i = 0; i > -255; --i)
     {
-        setMotorSpeed(float(i) / 255.0);
+        setMotorSpeed(-1.0);
         delay(50);
     }
     setMotorSpeed(0);
