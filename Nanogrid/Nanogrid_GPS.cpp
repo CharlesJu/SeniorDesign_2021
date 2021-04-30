@@ -11,8 +11,8 @@ Nanogrid_GPS::Nanogrid_GPS(Print &print) : serial(SoftwareSerial(GPS_TX, GPS_RX)
 
     gpsData.data.status = NO_FIX;
     gpsData.data.lat = 0;
-    gpsData.data.min = 0;
-    gpsData.data.day = 0;
+    gpsData.data.lon = 0;
+    gpsData.data.time = 0;
 
 };
 
@@ -41,25 +41,28 @@ void Nanogrid_GPS::update(){
         if (!GPS.parse(GPS.lastNMEA()))   // sets newNMEAreceived() flag to false
             return;  // we can fail to parse a sentence in which case we should just wait for another
     }
-    printer->println(GPS.fix);
-    // if (GPS.fix == 1){
-    //     if(GPSSTAT)
-    //         printer->print("[GPS] () fixed");
-    //     gpsData.data.status = HAS_FIX;
-    //     gpsData.data.lat = (GPS.latitude_fixed / 78125) << 8; // fixed_lat * 2^15 / 10^7
+    if(GPSDEBUG)
+        printer->println(GPS.fix);
 
-    //     setTime(GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year); // Sync time with GPS
-    //     adjustTime(HOUR_OFFSET * SECS_PER_HOUR); // Adjust for timezone
+}
+
+void Nanogrid_GPS::pollData(){
+    if (GPS.fix == 1){
+        if(GPSSTAT)
+            printer->println("[GPS] polling -- fixed");
+        gpsData.data.status = HAS_FIX;
+        gpsData.data.lat = GPS.latitude/100.0;
+        gpsData.data.lon = GPS.longitude/100.0;
+        setTime(GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year); // Sync time with GPS
+        adjustTime(HOUR_OFFSET * SECS_PER_HOUR); // Adjust for timezone
         
-    //     gpsData.data.min = (hour()-12) * 60 + minute(); // -720 to +720, 0 being noon
+        gpsData.data.time = now();
         
-    //     gpsData.data.day = MONTH_TO_DAY_ARR[GPS.month-1] + GPS.day; // Assume no leap years
-        
-    // } else {
-    //     if(GPSSTAT)
-    //         printer->println("[GPS] update() no Fix");
-    //     gpsData.data.status = NO_FIX;
-    // }
+    } else {
+        if(GPSSTAT)
+            printer->println("[GPS] polling -- no Fix");
+        gpsData.data.status = NO_FIX;
+    }
 }
 
 uint8_t Nanogrid_GPS::getStatus(){
@@ -74,14 +77,22 @@ void Nanogrid_GPS::waitForFix(){
     }
 }
 
-int16_t Nanogrid_GPS::getLat(){
+float Nanogrid_GPS::getLat(){
     return gpsData.data.lat;
 }
 
-int16_t Nanogrid_GPS::getMin(){
-    return gpsData.data.min;
+float Nanogrid_GPS::getLon(){
+    return gpsData.data.lon;
 }
 
-uint16_t Nanogrid_GPS::getDay(){
-    return gpsData.data.day;
+time_t Nanogrid_GPS::getTime(){
+    return gpsData.data.time;
 }
+
+// int16_t Nanogrid_GPS::getMin(){
+//     return gpsData.data.min;
+// }
+
+// uint16_t Nanogrid_GPS::getDay(){
+//     return gpsData.data.day;
+// }

@@ -14,13 +14,12 @@ enum GPS_Status {
 
 
 typedef union __GPS_Data__ {
-    uint8_t byteAccess[7];
     struct Data
     {
         int8_t status;
-        int16_t lat;
-        int16_t min;
-        uint16_t day;
+        float lat;
+        float lon;
+        time_t time;
     } data;
 
 } GPS_Data;
@@ -35,11 +34,15 @@ class Nanogrid_GPS{
 
         void waitForFix();
         void update();
-        uint8_t getStatus();
+        void pollData();
 
-        int16_t getLat();
-        int16_t getMin();
-        uint16_t getDay();
+        uint8_t getStatus();
+        float getLat();
+        float getLon();
+        time_t getTime();
+        // int16_t getMin();
+        // uint16_t getDay();
+
 
     private:
         GPS_Data gpsData;
