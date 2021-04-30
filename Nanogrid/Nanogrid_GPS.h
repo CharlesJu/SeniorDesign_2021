@@ -5,7 +5,7 @@
 #include "Constants.h"
 
 #ifndef __NANOGRID_GPS_H__
-
+#define __NANOGRID_GPS_H__
 
 enum GPS_Status {
     NO_FIX,
@@ -29,7 +29,10 @@ typedef union __GPS_Data__ {
 class Nanogrid_GPS{
 
     public:
-        Nanogrid_GPS();
+        Nanogrid_GPS( Print &print);
+
+        void setup();
+
         void waitForFix();
         void update();
         uint8_t getStatus();
@@ -42,6 +45,7 @@ class Nanogrid_GPS{
         GPS_Data gpsData;
         Adafruit_GPS GPS;
         SoftwareSerial serial;
+        Print* printer;
 
 };
 
