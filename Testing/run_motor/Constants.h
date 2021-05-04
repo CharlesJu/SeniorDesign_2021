@@ -7,11 +7,10 @@
 #define ENC 0
 #define GPS_TX 2
 #define GPS_RX 4
-#define GPS_FIX 3
 
 #define HOUR_OFFSET -7
 
-#define ENC_DEFAULT 35
+#define ENC_DEFAULT 100
 
 #define IMU_I2C_ID -1
 #define IMU_I2C_ADDRESS 0x28
@@ -19,9 +18,9 @@
 
 // DEBUG
 #define GPSECHO false
-#define GPSSTAT true
+#define GPSSTAT false
 #define GPSDEBUG false
 #define ENCSTAT false
 #define ENCDEBUG false
-#define IMUDEBUG false
+#define IMUDEBUG true
 #endif

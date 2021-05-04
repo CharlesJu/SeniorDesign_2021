@@ -41,13 +41,21 @@ void Nanogrid_GPS::update(){
         if (!GPS.parse(GPS.lastNMEA()))   // sets newNMEAreceived() flag to false
             return;  // we can fail to parse a sentence in which case we should just wait for another
     }
-    if(GPSDEBUG)
-        printer->println(GPS.fix);
+    if(GPSDEBUG){
+        // printer->println(GPS.fix);
+        printer->println(digitalRead(GPS_FIX));
+    }
+    
+    if(GPS.fix == 1 || digitalRead(GPS_FIX)){
+        gpsData.data.status = HAS_FIX;
+    } else {
+        gpsData.data.status = NO_FIX;
+    }
 
 }
 
 void Nanogrid_GPS::pollData(){
-    if (GPS.fix == 1){
+    if (GPS.fix == 1 || digitalRead(GPS_FIX)){
         if(GPSSTAT)
             printer->println("[GPS] polling -- fixed");
         gpsData.data.status = HAS_FIX;
@@ -70,7 +78,7 @@ uint8_t Nanogrid_GPS::getStatus(){
 }
 
 void Nanogrid_GPS::waitForFix(){
-    while(getStatus() == NO_FIX){
+    while(gpsData.data.status == NO_FIX){
         if(GPSSTAT)
             printer->println("[GPS] waiting for fix");
         update();
