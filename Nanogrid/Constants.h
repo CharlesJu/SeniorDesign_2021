@@ -9,19 +9,39 @@
 #define GPS_RX 4
 #define GPS_FIX 3
 
-#define HOUR_OFFSET -7
+#define HOUR_OFFSET -8
 
-#define ENC_DEFAULT 35
+#define ENC_DEFAULT 12
 
 #define IMU_I2C_ID -1
 #define IMU_I2C_ADDRESS 0x28
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 
+#define STAT true
+#define DEBUG false
+
+#if DEBUG
 // DEBUG
-#define GPSECHO false
-#define GPSSTAT true
-#define GPSDEBUG false
-#define ENCSTAT false
-#define ENCDEBUG false
-#define IMUDEBUG false
+    #define GPSDEBUG false
+    #define ENCDEBUG false
+    #define IMUDEBUG true
+#else
+    #define GPSDEBUG false
+    #define ENCDEBUG false
+    #define IMUDEBUG false
+#endif
+
+#if STAT
+// Stat
+    #define GPSECHO false
+    #define GPSSTAT true
+    #define ENCSTAT true
+    #define IMUSTAT true
+#else
+    #define GPSECHO false
+    #define GPSSTAT false
+    #define ENCSTAT false
+    #define IMUSTAT false
+#endif
+
 #endif
