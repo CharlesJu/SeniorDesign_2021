@@ -1,63 +1,144 @@
-#include "Nanogrid.h"
-#include "PID.h"
+#include "Constants.h"
 #include "MotorControl.h"
-#include "Math.h"
-#include "Encoder.h"
+#include "PID.h"
+#include "Nanogrid_GPS.h"
+#include "SolarPosition.h"
+#include "Nanogrid_IMU.h"
 
-// PID Constants and Setup
-
-float kP = 0.5;
-float kI = 0;
-float kD = 0;
-float enc_value;
+uint16_t enc_val;
+float p = 10;
+float i = 0.0001;
+float d = 0.0;
 float motor_power;
-PID motor_pid(kP, kI, kD);
+float adjusted_target;
+float enc_target;
+float gyro_value;
+float prev_target;
 
-float lat;
-int16_t n_day;
-int16_t n_min;
-float tilt;
-float azimuth;
-float delta;
-float omega;
+PID motor_pid(p, i, d);
+Nanogrid_GPS gps(Serial);
+Nanogrid_IMU imu_t(Serial);
 
-void setup() {
+void setup(){
+    Serial.begin(115200);
+    Serial.println("----- Begin Program -----");
+    delay(1000);
+    gps.setup();
+    imu_t.setup();
 
-  // Motor Setup
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-
-  n_day = 116;
-  n_min = 0;
-  lat = 37.354107;
-
-  Serial.begin(9600);
-  Serial.println("Begin Program");
-
-  motor_power = motor_pid.get(enc_value, 180);
-  while(abs(motor_pid.getErr()) > 20){
-    setMotorSpeed(1);
-    enc_value = getAngle();
-    Serial.println(enc_value);
-  }
-
+    enc_target = ENC_DEFAULT;
+    adjusted_target = ENC_DEFAULT;
+    setMotorSpeed(255);
+    delay(1000);
+    setMotorSpeed(0);
+    
+    gps.waitForFix();
 }
 
-void loop() {
-  
-  // motorTest();
-  
-  enc_value = getAngle();
-  motor_power = motor_pid.get(enc_value, 90);
-  setMotorSpeed(motor_power);
-  Serial.println(enc_value);
+uint32_t timer_2s = millis();
+uint32_t timer_100ms = millis();
+uint32_t timer_5ms = millis();
+uint32_t timer_5min = millis();
+bool turn = true;
+uint8_t ss_count = 0;
+float error;
 
-  // delay(1000);
-  
-  // char tbs[32];
-  // sprintf(tbs, "Motor: %d\tCurrent Angle: %u",(int)motor_power*100, enc_value);
-  
+void loop(){
+
+    error = abs(motor_pid.getErr());
+    gps.update();
+
+    gyro_value = imu_t.getRotation();
+    enc_val = analogRead(ENC);
+    motor_pid.update(enc_val, adjusted_target);
+
+    if(gyro_value > enc_target){
+        adjusted_target = 360 - (gyro_value - enc_target);
+    } else if (gyro_value < enc_target){
+        adjusted_target = enc_target - gyro_value;
+    } else {
+        adjusted_target = enc_target;
+    }
+        
+    adjusted_target = (adjusted_target/360.0) * 1024;
+
+    if(error < 10){
+        ss_count++;
+    }
+    else{
+        ss_count = 0;
+        turn = true;
+    }
+
+    if(turn){
+
+        motor_power = motor_pid.get(enc_val, adjusted_target);
+        setMotorSpeed(motor_power);
+        if (ss_count > 100){
+            turn = false;
+            setMotorBreak();
+        }
+    }
+    
+    
+
+    if(millis() - timer_100ms > 100){
+        timer_100ms = millis();
+        if(IMUDEBUG){
+            // Serial.print("gyro_value: ");
+            // Serial.println(gyro_value);
+            Serial.print("enc_target: ");
+            Serial.println(enc_target);
+            // Serial.print("adjusted_target: ");
+            // Serial.println(adjusted_target);
+            // Serial.print("motor_power: ");
+            // Serial.println(motor_power);
+            Serial.print("enc_val: ");
+            Serial.println(enc_val);
+            Serial.print("error ");
+            Serial.println(error);
+
+        }
+    }
+
+    if (millis() - timer_2s > 2000){
+        timer_2s = millis();
+        gps.pollData();
+        
+        if(gps.getStatus() == HAS_FIX){
+            SolarPosition_t position_data;
+            SolarPosition pos(gps.getLon(), gps.getLat());
+            position_data = pos.getSolarPosition(gps.getTime());
+
+            enc_target = position_data.azimuth - ENC_DEFAULT;
+            
+        } else {
+            enc_target = ENC_DEFAULT;
+        }
+
+        if(ENCSTAT){
+            Serial.print("[ENC] Target: "); Serial.println(enc_target);
+            Serial.print("[ENC] Error: "); Serial.println(error);
+        }
+        if(IMUSTAT){
+            Serial.print("[IMU] Turn: "); 
+            Serial.println(turn);
+        }
+        if(GPSDEBUG){
+            Serial.print("Lat: "); Serial.println(gps.getLat());
+            Serial.print("Lon: "); Serial.println(gps.getLon());
+            Serial.print("Time: "); Serial.println(gps.getTime());
+            
+        }
+    }
+
+    if(millis() - timer_5min > 300000){
+        timer_5min = millis();
+        if(prev_target - enc_target > 5){
+            turn = true;
+            prev_target = enc_target;
+        }
+    }
+    
+
 }

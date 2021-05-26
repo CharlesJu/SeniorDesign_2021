@@ -50,15 +50,15 @@ void PID::update(float val, float target)
         vals.e_tot += vals.e_cur;
 
         //Prevents I value Windup
-        // if ((vals.e_diff < vals.e_diff_prev + 0.005 || vals.e_diff > vals.e_diff_prev - 0.005) && vals.dT_cont < 501)
-        // {
-        //     vals.dT_cont += 1;
-        // }
-        // else
-        // {
-        //     vals.dT_cont = 0;
-        //     vals.e_tot = 0;
-        // }
+        if ((vals.e_diff < vals.e_diff_prev + 0.005 || vals.e_diff > vals.e_diff_prev - 0.005) && vals.dT_cont < 501)
+        {
+            vals.dT_cont += 1;
+        }
+        else
+        {
+            vals.dT_cont = 0;
+            vals.e_tot = 0;
+        }
     }
 }
 

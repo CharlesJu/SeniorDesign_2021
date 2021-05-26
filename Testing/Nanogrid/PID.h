@@ -1,5 +1,4 @@
-#ifndef __PID_H__
-#define __PID_H__
+#ifndef PID_H
 
 typedef struct{
     float kP;   float kI;   float kD;

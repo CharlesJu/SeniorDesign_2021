@@ -1,28 +1,23 @@
+#include "Nanogrid.h"
 #include "Arduino.h"
 #include "MotorControl.h"
-#include "Constants.h"
 
-void setMotorSpeed(int16_t speed)
+void setMotorSpeed(float speed)
 {
-    uint8_t pwm_value = 0;
-
+    uint8_t pwm_value;
     speed *= MOTOR_DIRECTION;
-
     if (speed < 0)
     {
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
-        if(speed < -255) speed = -255;
-        pwm_value = (uint8_t) (-1*speed);
+        pwm_value = (uint8_t)(-speed * 255);
     }
     else if (speed > 0)
     {
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
-        if(speed > 255) speed = 255;
-        pwm_value = (uint8_t) (speed);
+        pwm_value = (uint8_t)(speed * 255);
     }
-
     analogWrite(ENA, pwm_value);
 }
 
@@ -36,7 +31,7 @@ void motorTest()
 {
     for (int i = 0; i < 255; ++i)
     {
-        setMotorSpeed(255);
+        setMotorSpeed(1.0);
         delay(50);
     }
     setMotorSpeed(0);
@@ -45,7 +40,7 @@ void motorTest()
 
     for (int i = 0; i > -255; --i)
     {
-        setMotorSpeed(-255);
+        setMotorSpeed(-1.0);
         delay(50);
     }
     setMotorSpeed(0);
